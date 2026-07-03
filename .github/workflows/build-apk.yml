@@ -5,64 +5,57 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# 🔥 GLOBAL environment variables - available to ALL steps
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Extract ZIP if exists
       - name: Extract ZIP if exists
         run: |
           if [ -f "kavita-ai-expo.zip" ]; then
-            echo "Found kavita-ai-expo.zip, extracting..."
             unzip -o kavita-ai-expo.zip
             if [ -d "kavita-ai" ]; then
-              echo "Moving files from kavita-ai/ to root..."
               cp -r kavita-ai/* .
               cp -r kavita-ai/.github . 2>/dev/null || true
               rm -rf kavita-ai kavita-ai-expo.zip
             fi
           fi
-          echo "Files in directory:"
-          ls -la
 
-      # Step 3: Check project files
       - name: Check files
         run: |
           if [ -f "package.json" ]; then
             echo "✅ package.json found"
           else
             echo "❌ package.json NOT found"
-            ls -la
             exit 1
           fi
 
-      # Step 4: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      # Step 5: Install dependencies
       - name: Install dependencies
         run: |
           npm install
           npm install -g eas-cli
 
-      # Step 6: Verify EAS token (no login needed)
       - name: Verify EAS Token
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          echo "EXPO_TOKEN is set: $([ -n "$EXPO_TOKEN" ] && echo 'YES' || echo 'NO')"
+          if [ -n "$EXPO_TOKEN" ]; then
+            echo "✅ EXPO_TOKEN is set"
+          else
+            echo "❌ EXPO_TOKEN is NOT set!"
+            exit 1
+          fi
 
-      # Step 7: Build APK (EAS uses EXPO_TOKEN env variable automatically)
       - name: Build APK
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           eas build --platform android --profile preview --non-interactive
