@@ -1,56 +1,82 @@
-name: Build APK
+name: Build Kavita AI APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
-    
-    - name: Install dependencies
-      run: |
-        npm install
-        cd android && ./gradlew clean
-    
-    - name: Build APK
-      run: |
-        cd android
-        ./gradlew assembleRelease
-    
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
-      with:
-        name: kavita-ai-apk
-        path: android/app/build/outputs/apk/release/app-release-unsigned.apk
-    
-    - name: Create Release
-      if: github.ref == 'refs/heads/main'
-      uses: softprops/action-gh-release@v1
-      with:
-        files: android/app/build/outputs/apk/release/app-release-unsigned.apk
-        tag_name: v${{ github.run_number }}
-        name: Kavita AI v${{ github.run_number }}
-        body: |
-          💕 Kavita AI Mobile App
-          - Latest APK build
-          - Download and install
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Step 1: Checkout code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      # Step 3: Setup Java JDK 17
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Step 4: Setup Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Step 5: Install dependencies
+      - name: Install Node Dependencies
+        run: |
+          npm install
+          cd android && ./gradlew clean
+
+      # Step 6: Build Release APK
+      - name: Build Release APK
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      # Step 7: Upload APK as artifact (FIXED: v3 → v4)
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kavita-ai-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+
+      # Step 8: Create GitHub Release (FIXED: softprops/action-gh-release@v2)
+      - name: Create Release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          tag_name: v${{ github.run_number }}
+          name: Kavita AI v${{ github.run_number }}
+          body: |
+            💕 Kavita AI Mobile App
+
+            **Features:**
+            - 🤖 Smart AI Chat
+            - 🎙️ Voice Mode
+            - 💕 Girlfriend Personality
+            - 🧠 Long-term Memory
+
+            **How to use:**
+            1. Download APK
+            2. Install on Android
+            3. Connect to your PC backend
+            4. Talk to Kavita!
+
+            **Note:** This is an unsigned APK. Install at your own risk.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
