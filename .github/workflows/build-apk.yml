@@ -12,41 +12,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
+          # cache: 'npm'  ← REMOVED (no package-lock.json)
 
-      # Step 3: Setup Java JDK 17
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Step 4: Setup Android SDK
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # Step 5: Install dependencies
       - name: Install Node Dependencies
         run: |
           npm install
           cd android && ./gradlew clean
 
-      # Step 6: Build Release APK
       - name: Build Release APK
         run: |
           cd android
           ./gradlew assembleRelease
 
-      # Step 7: Upload APK as artifact (FIXED: v3 → v4)
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -54,7 +47,6 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release-unsigned.apk
           retention-days: 30
 
-      # Step 8: Create GitHub Release (FIXED: softprops/action-gh-release@v2)
       - name: Create Release
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
@@ -64,19 +56,6 @@ jobs:
           name: Kavita AI v${{ github.run_number }}
           body: |
             💕 Kavita AI Mobile App
-
-            **Features:**
-            - 🤖 Smart AI Chat
-            - 🎙️ Voice Mode
-            - 💕 Girlfriend Personality
-            - 🧠 Long-term Memory
-
-            **How to use:**
-            1. Download APK
-            2. Install on Android
-            3. Connect to your PC backend
-            4. Talk to Kavita!
-
-            **Note:** This is an unsigned APK. Install at your own risk.
+            - Download and install on Android!
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
