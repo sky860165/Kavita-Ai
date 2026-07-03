@@ -1,61 +1,23 @@
-name: Build Kavita AI APK
+name: Build APK
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
-          # cache: 'npm'  ← REMOVED (no package-lock.json)
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Node Dependencies
-        run: |
-          npm install
-          cd android && ./gradlew clean
-
-      - name: Build Release APK
-        run: |
-          cd android
-          ./gradlew assembleRelease
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - uses: android-actions/setup-android@v3
+      - run: npm install
+      - run: cd android && ./gradlew assembleRelease
+      - uses: actions/upload-artifact@v4
         with:
-          name: kavita-ai-apk
+          name: kavita-ai
           path: android/app/build/outputs/apk/release/app-release-unsigned.apk
-          retention-days: 30
-
-      - name: Create Release
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: android/app/build/outputs/apk/release/app-release-unsigned.apk
-          tag_name: v${{ github.run_number }}
-          name: Kavita AI v${{ github.run_number }}
-          body: |
-            💕 Kavita AI Mobile App
-            - Download and install on Android!
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
