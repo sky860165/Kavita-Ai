@@ -20,7 +20,6 @@ jobs:
           if [ -f "kavita-ai-expo.zip" ]; then
             echo "Found kavita-ai-expo.zip, extracting..."
             unzip -o kavita-ai-expo.zip
-            # Move files from kavita-ai/ folder to root
             if [ -d "kavita-ai" ]; then
               echo "Moving files from kavita-ai/ to root..."
               cp -r kavita-ai/* .
@@ -28,19 +27,16 @@ jobs:
               rm -rf kavita-ai kavita-ai-expo.zip
             fi
           fi
-          echo "Current directory structure:"
+          echo "Files in directory:"
           ls -la
 
       # Step 3: Check project files
       - name: Check files
         run: |
-          echo "=== Checking for package.json ==="
           if [ -f "package.json" ]; then
             echo "✅ package.json found"
-            cat package.json
           else
             echo "❌ package.json NOT found"
-            echo "Files in current directory:"
             ls -la
             exit 1
           fi
@@ -51,17 +47,17 @@ jobs:
         with:
           node-version: '18'
 
-      # Step 5: Setup EAS (Expo)
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
-        with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      # Step 6: Install dependencies
+      # Step 5: Install dependencies manually
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          npm install -g eas-cli
+
+      # Step 6: Login to Expo with token
+      - name: Login to Expo
+        run: eas login --token ${{ secrets.EXPO_TOKEN }}
 
       # Step 7: Build APK
       - name: Build APK
-        run: eas build --platform android --profile preview --non-interactive
+        run: |
+          eas build --platform android --profile preview --non-interactive
