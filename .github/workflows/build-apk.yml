@@ -14,22 +14,36 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2: Unzip if project is in ZIP (optional)
+      # Step 2: Extract ZIP if exists
       - name: Extract ZIP if exists
         run: |
           if [ -f "kavita-ai-expo.zip" ]; then
+            echo "Found kavita-ai-expo.zip, extracting..."
             unzip -o kavita-ai-expo.zip
-            mv kavita-ai-expo/* .
-            mv kavita-ai-expo/.* . 2>/dev/null || true
-            rm -rf kavita-ai-expo kavita-ai-expo.zip
+            # Move files from kavita-ai/ folder to root
+            if [ -d "kavita-ai" ]; then
+              echo "Moving files from kavita-ai/ to root..."
+              cp -r kavita-ai/* .
+              cp -r kavita-ai/.github . 2>/dev/null || true
+              rm -rf kavita-ai kavita-ai-expo.zip
+            fi
           fi
-        shell: bash
+          echo "Current directory structure:"
+          ls -la
 
-      # Step 3: Check project structure
+      # Step 3: Check project files
       - name: Check files
         run: |
-          ls -la
-          cat package.json || echo "No package.json found"
+          echo "=== Checking for package.json ==="
+          if [ -f "package.json" ]; then
+            echo "✅ package.json found"
+            cat package.json
+          else
+            echo "❌ package.json NOT found"
+            echo "Files in current directory:"
+            ls -la
+            exit 1
+          fi
 
       # Step 4: Setup Node.js
       - name: Setup Node.js
