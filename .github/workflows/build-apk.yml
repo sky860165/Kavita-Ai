@@ -47,17 +47,22 @@ jobs:
         with:
           node-version: '18'
 
-      # Step 5: Install dependencies manually
+      # Step 5: Install dependencies
       - name: Install dependencies
         run: |
           npm install
           npm install -g eas-cli
 
-      # Step 6: Login to Expo with token
-      - name: Login to Expo
-        run: eas login --token ${{ secrets.EXPO_TOKEN }}
+      # Step 6: Verify EAS token (no login needed)
+      - name: Verify EAS Token
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          echo "EXPO_TOKEN is set: $([ -n "$EXPO_TOKEN" ] && echo 'YES' || echo 'NO')"
 
-      # Step 7: Build APK
+      # Step 7: Build APK (EAS uses EXPO_TOKEN env variable automatically)
       - name: Build APK
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           eas build --platform android --profile preview --non-interactive
